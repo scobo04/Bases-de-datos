@@ -1,0 +1,107 @@
+/*PRACTICAR SELECTS EN CLASE PROFE*/
+SELECT socio.nombre, socio.ape1, socio.ape2, ciudad.nombre 
+FROM socio,ciudad 
+WHERE socio.id_ciudad=ciudad.id;
+
+SELECT pelicula.titulo, cast1.nombre, cast1.ape1, cast1.ape2, tipo.nombre 
+FROM pelicula,participa,cast1,tipo
+WHERE pelicula.id=participa.id_pelicula
+AND participa.id_cast1=cast1.id
+AND participa.id_tipo=tipo.id
+ORDER BY pelicula.titulo ASC, tipo.nombre DESC;
+
+
+/*cuantas pelis tiene un determinado actor*/
+SELECT COUNT(*) 
+FROM pelicula,participa,cast1,tipo
+WHERE pelicula.id=participa.id_pelicula
+AND participa.id_cast1=cast1.id
+AND participa.id_tipo=tipo.id
+AND tipo.nombre="dirige"
+AND cast1.nombre="Denzel";
+
+
+SELECT * FROM cast1;
+describe cast1;
+INSERT INTO cast1 VALUES(5,"Penelope", " ", " ");/*PEDIR COMANDO COMPLETO*/
+
+/*LEFT JOIN*/
+SELECT cast1 .*, participa.*
+FROM cast1
+LEFT JOIN participa
+ON cast1.id=participa.id_cast1;
+
+
+/*RIGHT JOIN*/
+SELECT * FROM ciudad;
+SELECT socio.*, ciudad.*
+FROM socio
+RIGHT JOIN ciudad
+ON ciudad.id=socio.id_ciudad;
+
+/*UNION*/
+SELECT socio.nombre, socio.ape1, socio.ape2
+FROM socio
+UNION
+SELECT cast1.nombre, cast1.ape1, cast1.ape2
+FROM cast1;
+
+/*ESTE NO FUNCIONA PORQUE NO EXISTE MANACOR*/
+SELECT socio.nombre, socio.ape1, socio.ape2
+FROM socio, ciudad
+WHERE socio.id_ciudad=ciudad.id
+AND ciudad.nombre="Manacor"
+UNION
+SELECT cast1.nombre, cast1.ape1, cast1.ape2
+FROM cast1;
+
+/*GROUP BY*/
+SELECT COUNT(socio.id), ciudad.nombre
+FROM socio,ciudad
+WHERE socio.id_ciudad=ciudad.id
+GROUP BY ciudad.nombre;
+
+
+/*SUM*/
+ALTER TABLE alquila ADD COLUMN price float;
+SET SQL_SAFE_UPDATES = 0;
+UPDATE alquila SET price=10;
+UPDATE alquila SET id_socio=1;
+SELECT * FROM alquila;
+SELECT socio.id, socio.nombre, socio.ape1, socio.ape2, sum(alquila.price)
+FROM socio, alquila
+WHERE alquila.id_socio=socio.id
+GROUP BY (socio.id);
+
+
+/*HAVING*/
+SELECT socio.id, socio.nombre, socio.ape1, socio.ape2, sum(alquila.price) AS total
+FROM socio, alquila
+WHERE alquila.id_socio=socio.id
+GROUP BY (socio.id)
+HAVING total>1000;
+
+/*peliculas que han participado menos de 3 personas*/
+SELECT pelicula.id, pelicula.titulo, count(participa.id_pelicula) AS total
+WHERE pelicula.id=participa.id_pelicula
+GROUP BY (pelicula.id)
+HAVING total<3;
+
+/*EXISTS*/
+/*los socios que no tienen ningun alquiler*/
+SELECT socio.*
+FROM socio
+WHERE NOT EXISTS (SELECT * FROM alquila WHERE socio.id=alquila.id_socio);
+
+/*los socios que tienen algun alquiler*/
+SELECT socio.*
+FROM socio
+WHERE EXISTS (SELECT * FROM alquila WHERE socio.id=alquila.id_socio);
+
+/*los socios que todavia no han alquilado Avatar*/
+SELECT socio.*
+FROM socio
+WHERE NOT EXISTS (SELECT * FROM alquila, pelicula WHERE socio.id=alquila.id_socio 
+AND 
+alquila.id_pelicula=pelicula.id AND pelicula.titulo="Avatar") 
+AND socio.id_ciudad=ciudad.id AND ciudad.nombre="Manacor";
